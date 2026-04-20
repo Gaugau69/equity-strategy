@@ -18,3 +18,4 @@ datetime,dry_run,n_orders,n_long,n_short,gross_long,gross_short,total_trades_usd
 2026-04-12 13:57,False,143,,,,,,2023-12-22
 2026-04-13 08:23,False,143,,,,,,2023-12-22
 2026-04-13 09:06,False,134,,,,,,2026-04-06
+2026-04-20 18:23,False,84,,,,,,2023-12-22
