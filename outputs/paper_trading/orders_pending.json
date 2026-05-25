@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-04-20T18:22:32.091198",
+  "generated_at": "2026-05-25T13:49:26.691697",
   "signal_date": "2023-12-22",
   "n_long": 75,
   "n_short": 75,
@@ -9,7 +9,7 @@
       "ticker": "ARE",
       "action": "BUY",
       "quantity": 13,
-      "price_est": 48.63,
+      "price_est": 48.37,
       "weight": 0.0066,
       "dollar_value": 664.4
     },
@@ -17,7 +17,7 @@
       "ticker": "AEE",
       "action": "SELL",
       "quantity": 3,
-      "price_est": 112.71,
+      "price_est": 111.29,
       "weight": -0.0043,
       "dollar_value": -427.66
     },
@@ -25,31 +25,31 @@
       "ticker": "AON",
       "action": "SELL",
       "quantity": 2,
-      "price_est": 331.8,
+      "price_est": 324.78,
       "weight": -0.0074,
       "dollar_value": -738.69
     },
     {
       "ticker": "APA",
       "action": "SELL",
-      "quantity": 28,
-      "price_est": 35.74,
+      "quantity": 26,
+      "price_est": 38.8,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
     {
       "ticker": "ACGL",
       "action": "SELL",
-      "quantity": 2,
-      "price_est": 97.59,
+      "quantity": 3,
+      "price_est": 96.3,
       "weight": -0.0029,
       "dollar_value": -291.59
     },
     {
       "ticker": "ADM",
       "action": "SELL",
-      "quantity": 15,
-      "price_est": 67.04,
+      "quantity": 13,
+      "price_est": 77.52,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
@@ -57,15 +57,15 @@
       "ticker": "AJG",
       "action": "SELL",
       "quantity": 1,
-      "price_est": 221.61,
+      "price_est": 204.75,
       "weight": -0.0039,
       "dollar_value": -388.78
     },
     {
       "ticker": "T",
       "action": "SELL",
-      "quantity": 38,
-      "price_est": 26.51,
+      "quantity": 39,
+      "price_est": 25.26,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
@@ -73,7 +73,7 @@
       "ticker": "AXON",
       "action": "BUY",
       "quantity": 1,
-      "price_est": 402.85,
+      "price_est": 386.0,
       "weight": 0.0066,
       "dollar_value": 659.85
     },
@@ -81,39 +81,39 @@
       "ticker": "BX",
       "action": "BUY",
       "quantity": 5,
-      "price_est": 129.08,
+      "price_est": 118.51,
       "weight": 0.0067,
       "dollar_value": 668.94
     },
     {
       "ticker": "XYZ",
       "action": "BUY",
-      "quantity": 9,
-      "price_est": 71.26,
+      "quantity": 10,
+      "price_est": 68.08,
       "weight": 0.007,
       "dollar_value": 701.87
     },
     {
       "ticker": "BRO",
       "action": "SELL",
-      "quantity": 14,
-      "price_est": 67.72,
+      "quantity": 17,
+      "price_est": 57.82,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
     {
       "ticker": "BF-B",
       "action": "SELL",
-      "quantity": 34,
-      "price_est": 29.15,
+      "quantity": 38,
+      "price_est": 26.2,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
     {
       "ticker": "BLDR",
       "action": "BUY",
-      "quantity": 7,
-      "price_est": 88.5,
+      "quantity": 9,
+      "price_est": 74.15,
       "weight": 0.007,
       "dollar_value": 699.6
     },
@@ -121,55 +121,55 @@
       "ticker": "BG",
       "action": "SELL",
       "quantity": 8,
-      "price_est": 119.26,
+      "price_est": 120.71,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
     {
       "ticker": "BXP",
       "action": "BUY",
-      "quantity": 11,
-      "price_est": 58.05,
+      "quantity": 10,
+      "price_est": 60.29,
       "weight": 0.0065,
       "dollar_value": 647.36
     },
     {
       "ticker": "CPB",
       "action": "SELL",
-      "quantity": 14,
-      "price_est": 20.99,
+      "quantity": 15,
+      "price_est": 20.58,
       "weight": -0.0031,
       "dollar_value": -311.03
     },
     {
       "ticker": "CCL",
       "action": "BUY",
-      "quantity": 23,
-      "price_est": 29.22,
+      "quantity": 26,
+      "price_est": 25.98,
       "weight": 0.007,
       "dollar_value": 698.47
     },
     {
       "ticker": "CBOE",
       "action": "SELL",
-      "quantity": 3,
-      "price_est": 299.94,
+      "quantity": 2,
+      "price_est": 357.35,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
     {
       "ticker": "CNC",
       "action": "SELL",
-      "quantity": 23,
-      "price_est": 38.17,
+      "quantity": 15,
+      "price_est": 59.14,
       "weight": -0.0091,
       "dollar_value": -913.64
     },
     {
       "ticker": "CF",
       "action": "SELL",
-      "quantity": 7,
-      "price_est": 112.68,
+      "quantity": 6,
+      "price_est": 121.7,
       "weight": -0.0082,
       "dollar_value": -816.44
     },
@@ -177,7 +177,7 @@
       "ticker": "CRL",
       "action": "BUY",
       "quantity": 3,
-      "price_est": 183.88,
+      "price_est": 160.3,
       "weight": 0.0063,
       "dollar_value": 629.19
     },
@@ -185,7 +185,7 @@
       "ticker": "CHD",
       "action": "SELL",
       "quantity": 3,
-      "price_est": 96.88,
+      "price_est": 96.25,
       "weight": -0.0035,
       "dollar_value": -349.9
     },
@@ -193,7 +193,7 @@
       "ticker": "CFG",
       "action": "BUY",
       "quantity": 10,
-      "price_est": 64.45,
+      "price_est": 62.89,
       "weight": 0.0068,
       "dollar_value": 680.3
     },
@@ -201,15 +201,15 @@
       "ticker": "CME",
       "action": "SELL",
       "quantity": 2,
-      "price_est": 287.65,
+      "price_est": 291.23,
       "weight": -0.0076,
       "dollar_value": -758.13
     },
     {
       "ticker": "COHR",
       "action": "BUY",
-      "quantity": 2,
-      "price_est": 345.02,
+      "quantity": 1,
+      "price_est": 377.57,
       "weight": 0.0069,
       "dollar_value": 693.92
     },
@@ -217,7 +217,7 @@
       "ticker": "CL",
       "action": "SELL",
       "quantity": 9,
-      "price_est": 85.81,
+      "price_est": 90.61,
       "weight": -0.0084,
       "dollar_value": -835.88
     },
@@ -225,23 +225,23 @@
       "ticker": "DHI",
       "action": "BUY",
       "quantity": 4,
-      "price_est": 149.81,
+      "price_est": 143.73,
       "weight": 0.0068,
       "dollar_value": 681.43
     },
     {
       "ticker": "EPAM",
       "action": "BUY",
-      "quantity": 5,
-      "price_est": 131.34,
+      "quantity": 6,
+      "price_est": 102.69,
       "weight": 0.0066,
       "dollar_value": 657.58
     },
     {
       "ticker": "EFX",
       "action": "BUY",
-      "quantity": 3,
-      "price_est": 196.22,
+      "quantity": 4,
+      "price_est": 164.04,
       "weight": 0.0066,
       "dollar_value": 660.99
     },
@@ -249,15 +249,15 @@
       "ticker": "EXC",
       "action": "SELL",
       "quantity": 5,
-      "price_est": 47.02,
+      "price_est": 46.23,
       "weight": -0.0027,
       "dollar_value": -272.15
     },
     {
       "ticker": "EXPE",
       "action": "BUY",
-      "quantity": 2,
-      "price_est": 265.84,
+      "quantity": 3,
+      "price_est": 214.65,
       "weight": 0.007,
       "dollar_value": 704.15
     },
@@ -265,7 +265,7 @@
       "ticker": "EXR",
       "action": "BUY",
       "quantity": 4,
-      "price_est": 145.36,
+      "price_est": 143.3,
       "weight": 0.0063,
       "dollar_value": 634.87
     },
@@ -273,39 +273,39 @@
       "ticker": "XOM",
       "action": "SELL",
       "quantity": 4,
-      "price_est": 146.44,
+      "price_est": 154.92,
       "weight": -0.007,
       "dollar_value": -699.81
     },
     {
       "ticker": "FITB",
       "action": "BUY",
-      "quantity": 12,
-      "price_est": 50.34,
+      "quantity": 13,
+      "price_est": 49.48,
       "weight": 0.0065,
       "dollar_value": 651.9
     },
     {
       "ticker": "FTNT",
       "action": "SELL",
-      "quantity": 12,
-      "price_est": 81.84,
+      "quantity": 7,
+      "price_est": 133.93,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
     {
       "ticker": "GNRC",
       "action": "BUY",
-      "quantity": 3,
-      "price_est": 212.1,
+      "quantity": 2,
+      "price_est": 270.14,
       "weight": 0.0069,
       "dollar_value": 691.65
     },
     {
       "ticker": "GIS",
       "action": "SELL",
-      "quantity": 12,
-      "price_est": 35.5,
+      "quantity": 13,
+      "price_est": 33.69,
       "weight": -0.0045,
       "dollar_value": -447.1
     },
@@ -313,15 +313,15 @@
       "ticker": "GDDY",
       "action": "BUY",
       "quantity": 7,
-      "price_est": 85.72,
+      "price_est": 90.46,
       "weight": 0.0065,
       "dollar_value": 654.17
     },
     {
       "ticker": "HAL",
       "action": "SELL",
-      "quantity": 23,
-      "price_est": 37.15,
+      "quantity": 21,
+      "price_est": 41.47,
       "weight": -0.0087,
       "dollar_value": -874.76
     },
@@ -329,7 +329,7 @@
       "ticker": "HSY",
       "action": "SELL",
       "quantity": 5,
-      "price_est": 192.63,
+      "price_est": 194.78,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
@@ -337,7 +337,7 @@
       "ticker": "HRL",
       "action": "SELL",
       "quantity": 37,
-      "price_est": 21.19,
+      "price_est": 21.24,
       "weight": -0.008,
       "dollar_value": -797.0
     },
@@ -345,15 +345,15 @@
       "ticker": "INCY",
       "action": "SELL",
       "quantity": 10,
-      "price_est": 97.82,
+      "price_est": 97.16,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
     {
       "ticker": "PODD",
       "action": "BUY",
-      "quantity": 3,
-      "price_est": 203.73,
+      "quantity": 4,
+      "price_est": 154.87,
       "weight": 0.0065,
       "dollar_value": 653.04
     },
@@ -361,15 +361,15 @@
       "ticker": "IBKR",
       "action": "SELL",
       "quantity": 6,
-      "price_est": 81.71,
+      "price_est": 81.35,
       "weight": -0.0051,
       "dollar_value": -505.42
     },
     {
       "ticker": "IVZ",
       "action": "BUY",
-      "quantity": 26,
-      "price_est": 24.81,
+      "quantity": 23,
+      "price_est": 27.05,
       "weight": 0.0065,
       "dollar_value": 645.09
     },
@@ -377,15 +377,15 @@
       "ticker": "IQV",
       "action": "BUY",
       "quantity": 3,
-      "price_est": 176.46,
+      "price_est": 167.9,
       "weight": 0.0064,
       "dollar_value": 642.82
     },
     {
       "ticker": "KEY",
       "action": "BUY",
-      "quantity": 30,
-      "price_est": 21.8,
+      "quantity": 31,
+      "price_est": 21.56,
       "weight": 0.0068,
       "dollar_value": 675.75
     },
@@ -393,7 +393,7 @@
       "ticker": "KMB",
       "action": "SELL",
       "quantity": 9,
-      "price_est": 98.84,
+      "price_est": 99.14,
       "weight": -0.0095,
       "dollar_value": -952.52
     },
@@ -401,7 +401,7 @@
       "ticker": "KKR",
       "action": "BUY",
       "quantity": 6,
-      "price_est": 103.6,
+      "price_est": 94.04,
       "weight": 0.0064,
       "dollar_value": 638.27
     },
@@ -409,7 +409,7 @@
       "ticker": "KR",
       "action": "SELL",
       "quantity": 8,
-      "price_est": 68.19,
+      "price_est": 67.25,
       "weight": -0.0056,
       "dollar_value": -563.73
     },
@@ -417,15 +417,15 @@
       "ticker": "LEN",
       "action": "BUY",
       "quantity": 7,
-      "price_est": 92.79,
+      "price_est": 88.86,
       "weight": 0.0066,
       "dollar_value": 658.72
     },
     {
       "ticker": "MRSH",
       "action": "SELL",
-      "quantity": 3,
-      "price_est": 175.8,
+      "quantity": 4,
+      "price_est": 164.11,
       "weight": -0.0068,
       "dollar_value": -680.37
     },
@@ -433,7 +433,7 @@
       "ticker": "MAS",
       "action": "BUY",
       "quantity": 9,
-      "price_est": 66.58,
+      "price_est": 67.26,
       "weight": 0.0063,
       "dollar_value": 633.73
     },
@@ -441,23 +441,23 @@
       "ticker": "MRK",
       "action": "SELL",
       "quantity": 8,
-      "price_est": 119.07,
+      "price_est": 122.41,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
     {
       "ticker": "MCHP",
       "action": "BUY",
-      "quantity": 8,
-      "price_est": 78.76,
+      "quantity": 6,
+      "price_est": 93.43,
       "weight": 0.0065,
       "dollar_value": 650.77
     },
     {
       "ticker": "NTAP",
       "action": "SELL",
-      "quantity": 9,
-      "price_est": 104.53,
+      "quantity": 7,
+      "price_est": 139.36,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
@@ -465,7 +465,7 @@
       "ticker": "NKE",
       "action": "SELL",
       "quantity": 13,
-      "price_est": 46.03,
+      "price_est": 44.67,
       "weight": -0.0062,
       "dollar_value": -622.05
     },
@@ -473,31 +473,31 @@
       "ticker": "NOC",
       "action": "SELL",
       "quantity": 1,
-      "price_est": 665.26,
+      "price_est": 555.58,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
     {
       "ticker": "NCLH",
       "action": "BUY",
-      "quantity": 32,
-      "price_est": 20.99,
+      "quantity": 41,
+      "price_est": 16.3,
       "weight": 0.0068,
       "dollar_value": 683.7
     },
     {
       "ticker": "ORLY",
       "action": "SELL",
-      "quantity": 10,
-      "price_est": 93.71,
+      "quantity": 11,
+      "price_est": 91.74,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
     {
       "ticker": "OXY",
       "action": "SELL",
-      "quantity": 18,
-      "price_est": 53.79,
+      "quantity": 17,
+      "price_est": 58.81,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
@@ -505,7 +505,7 @@
       "ticker": "ORCL",
       "action": "SELL",
       "quantity": 1,
-      "price_est": 175.06,
+      "price_est": 192.08,
       "weight": -0.0025,
       "dollar_value": -252.71
     },
@@ -513,7 +513,7 @@
       "ticker": "PAYX",
       "action": "SELL",
       "quantity": 10,
-      "price_est": 91.96,
+      "price_est": 97.0,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
@@ -521,7 +521,7 @@
       "ticker": "PFE",
       "action": "SELL",
       "quantity": 3,
-      "price_est": 27.56,
+      "price_est": 25.9,
       "weight": -0.001,
       "dollar_value": -97.2
     },
@@ -529,7 +529,7 @@
       "ticker": "PNW",
       "action": "SELL",
       "quantity": 9,
-      "price_est": 104.04,
+      "price_est": 102.94,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
@@ -537,7 +537,7 @@
       "ticker": "PG",
       "action": "SELL",
       "quantity": 3,
-      "price_est": 146.93,
+      "price_est": 144.44,
       "weight": -0.0047,
       "dollar_value": -466.54
     },
@@ -545,7 +545,7 @@
       "ticker": "PGR",
       "action": "SELL",
       "quantity": 1,
-      "price_est": 202.58,
+      "price_est": 199.51,
       "weight": -0.0037,
       "dollar_value": -369.34
     },
@@ -553,31 +553,23 @@
       "ticker": "PHM",
       "action": "BUY",
       "quantity": 5,
-      "price_est": 126.53,
+      "price_est": 116.43,
       "weight": 0.0069,
       "dollar_value": 692.79
-    },
-    {
-      "ticker": "PWR",
-      "action": "BUY",
-      "quantity": 1,
-      "price_est": 601.88,
-      "weight": 0.0064,
-      "dollar_value": 636.0
     },
     {
       "ticker": "RCL",
       "action": "BUY",
       "quantity": 2,
-      "price_est": 285.48,
+      "price_est": 256.1,
       "weight": 0.0069,
       "dollar_value": 689.38
     },
     {
       "ticker": "SLB",
       "action": "SELL",
-      "quantity": 12,
-      "price_est": 52.66,
+      "quantity": 11,
+      "price_est": 57.28,
       "weight": -0.0064,
       "dollar_value": -641.49
     },
@@ -585,23 +577,23 @@
       "ticker": "SJM",
       "action": "SELL",
       "quantity": 8,
-      "price_est": 95.5,
+      "price_est": 103.36,
       "weight": -0.0086,
       "dollar_value": -855.32
     },
     {
       "ticker": "SW",
       "action": "SELL",
-      "quantity": 23,
-      "price_est": 42.24,
+      "quantity": 26,
+      "price_est": 38.05,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
     {
       "ticker": "SMCI",
       "action": "BUY",
-      "quantity": 21,
-      "price_est": 28.56,
+      "quantity": 17,
+      "price_est": 35.58,
       "weight": 0.0063,
       "dollar_value": 626.92
     },
@@ -609,7 +601,7 @@
       "ticker": "TKO",
       "action": "SELL",
       "quantity": 2,
-      "price_est": 186.31,
+      "price_est": 191.5,
       "weight": -0.0054,
       "dollar_value": -544.3
     },
@@ -617,23 +609,23 @@
       "ticker": "TT",
       "action": "BUY",
       "quantity": 1,
-      "price_est": 476.11,
+      "price_est": 451.02,
       "weight": 0.0062,
       "dollar_value": 624.65
     },
     {
       "ticker": "TFC",
       "action": "BUY",
-      "quantity": 12,
-      "price_est": 50.57,
+      "quantity": 13,
+      "price_est": 48.38,
       "weight": 0.0066,
       "dollar_value": 656.45
     },
     {
       "ticker": "USB",
       "action": "BUY",
-      "quantity": 11,
-      "price_est": 56.93,
+      "quantity": 12,
+      "price_est": 54.83,
       "weight": 0.0067,
       "dollar_value": 670.07
     },
@@ -641,7 +633,7 @@
       "ticker": "UNH",
       "action": "SELL",
       "quantity": 1,
-      "price_est": 324.63,
+      "price_est": 388.47,
       "weight": -0.0058,
       "dollar_value": -583.17
     },
@@ -649,7 +641,7 @@
       "ticker": "VRSK",
       "action": "SELL",
       "quantity": 5,
-      "price_est": 178.07,
+      "price_est": 171.11,
       "weight": -0.0101,
       "dollar_value": -1009.32
     },
@@ -657,15 +649,15 @@
       "ticker": "WMT",
       "action": "SELL",
       "quantity": 7,
-      "price_est": 127.5,
+      "price_est": 120.27,
       "weight": -0.0089,
       "dollar_value": -894.2
     },
     {
       "ticker": "WBD",
       "action": "BUY",
-      "quantity": 23,
-      "price_est": 27.47,
+      "quantity": 24,
+      "price_est": 27.03,
       "weight": 0.0066,
       "dollar_value": 655.31
     },
@@ -673,7 +665,7 @@
       "ticker": "WTW",
       "action": "SELL",
       "quantity": 3,
-      "price_est": 297.64,
+      "price_est": 257.4,
       "weight": -0.0101,
       "dollar_value": -1009.32
     }
