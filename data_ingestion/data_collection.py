@@ -151,9 +151,8 @@ def download_one_ticker(ticker: str, today: str) -> pd.Series:
             return s
         raise ValueError(f"Empty series for {ticker}")
 
-    dates    = [datetime.utcfromtimestamp(ts).date() for ts in timestamps]
+    dates = [datetime.fromtimestamp(ts, tz=timezone.utc).date() for ts in timestamps]
     new_data = pd.Series(closes, index=pd.to_datetime(dates), name=ticker, dtype=float)
-    new_data = new_data.dropna().sort_index()
 
     # Merge avec le cache existant si disponible
     if last_cached is not None and cache_path.exists():
