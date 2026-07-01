@@ -31,15 +31,17 @@ FACTOR_WEIGHTS = {
     "MOM_12M":  0.25,
     "VOL_1M":   0.20,
     "BETA":     0.35,
+    "REV_1W":  -0.10,   # contrarian: short-term losers tend to revert
+    "HIGH_52W": 0.15,   # stocks near 52W high show momentum continuation
+    "RVOL":     0.05,   # relative volume: high vol = institutional interest
 }
 
 BLEND_RIDGE     = 0.35
 BLEND_COMPOSITE = 0.65
 
-# Factors used for alpha signal generation (all computed factors).
-# BETA is included as a predictor — its IC is estimated on market-residualised
-# returns so the coefficient reflects true cross-sectional alpha, not the
-# market-drift premium.
+# BETA is residualised in IC estimation (market-neutralised returns).
+# REV_1W has a negative prior weight — contrarian signal.
+# HIGH_52W and RVOL are added as supplementary alpha signals.
 SIGNAL_FACTORS = ["MOM_1M", "MOM_3M", "MOM_12M", "VOL_1M", "BETA"]
 
 

@@ -1,0 +1,94 @@
+ticker,sector
+AAPL,IT
+ABBV,HC
+ABT,HC
+ACN,IT
+ADBE,IT
+ADI,IT
+ADP,IT
+AMAT,IT
+AMD,IT
+AMGN,HC
+AMZN,Consumer Cyclical
+AON,FIN
+AVGO,IT
+AXP,FIN
+BAC,FIN
+BDX,HC
+BKNG,Consumer Cyclical
+BSX,HC
+C,FIN
+CAT,IND
+CB,FIN
+CDNS,IT
+CL,Consumer Defensive
+CME,FIN
+COST,Consumer Defensive
+CRM,IT
+CSCO,IT
+CSX,IND
+CTAS,IND
+CVS,HC
+CVX,EN
+DUK,UT
+ECL,Basic Materials
+EOG,EN
+ETN,IND
+FDX,IND
+GILD,HC
+GOOGL,COMM
+GS,FIN
+HD,Consumer Cyclical
+HON,IND
+ICE,FIN
+INTU,IT
+ISRG,HC
+ITW,IND
+JNJ,HC
+JPM,FIN
+KLAC,IT
+KO,Consumer Defensive
+LIN,Basic Materials
+LLY,HC
+LOW,Consumer Cyclical
+LRCX,IT
+MA,FIN
+MCD,Consumer Cyclical
+MCO,FIN
+META,COMM
+MO,Consumer Defensive
+MRK,HC
+MSFT,IT
+MU,IT
+NEE,UT
+NFLX,COMM
+NKE,Consumer Cyclical
+NOC,IND
+NOW,IT
+NSC,IND
+NVDA,IT
+ORCL,IT
+ORLY,Consumer Cyclical
+PANW,IT
+PEP,Consumer Defensive
+PG,Consumer Defensive
+PGR,FIN
+PM,Consumer Defensive
+PSA,RE
+QCOM,IT
+REGN,HC
+RTX,IND
+SCHW,FIN
+SHW,Basic Materials
+SNPS,IT
+SO,UT
+SYK,HC
+TJX,Consumer Cyclical
+TMO,HC
+TXN,IT
+V,FIN
+VRTX,HC
+WM,IND
+WMT,Consumer Defensive
+XOM,EN
+ZTS,HC

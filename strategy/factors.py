@@ -24,6 +24,9 @@ from .config import (
     MOM_SKIP_WINDOW,
     VOL_WINDOW,
     BETA_WINDOW,
+    REV_WINDOW,
+    HIGH52W_WINDOW,
+    RVOL_WINDOW,
 )
 
 
@@ -34,6 +37,7 @@ from .config import (
 def compute_factors(
     prices: pd.DataFrame,
     market_prices: pd.Series,
+    volume: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """
     Compute raw factor values for every stock on every date.
@@ -64,6 +68,22 @@ def compute_factors(
     # ── Rolling Beta ──────────────────────────────────────────────────────────
     betas = _rolling_beta(ret, mkt_ret, window=BETA_WINDOW)
     factors["BETA"] = betas
+
+    # ── Short-term reversal (contrarian) ──────────────────────────────────────
+    # Stocks with negative 5-day returns tend to mean-revert upward
+    factors["REV_1W"] = prices.pct_change(REV_WINDOW)
+
+    # ── 52-week high proximity ────────────────────────────────────────────────
+    # Stocks near their 52-week high exhibit positive momentum continuation
+    rolling_max = prices.rolling(HIGH52W_WINDOW, min_periods=HIGH52W_WINDOW // 2).max()
+    factors["HIGH_52W"] = prices / rolling_max.replace(0, np.nan)
+
+    # ── Relative volume ───────────────────────────────────────────────────────
+    # Unusually high volume signals institutional interest
+    if volume is not None:
+        avg_vol = volume.rolling(RVOL_WINDOW, min_periods=5).mean()
+        factors["RVOL"] = volume / avg_vol.replace(0, np.nan)
+        factors["RVOL"] = factors["RVOL"].reindex(prices.index)
 
     panel = pd.concat(factors, axis=1)
     return panel

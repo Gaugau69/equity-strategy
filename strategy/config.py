@@ -25,6 +25,9 @@ MOM_LONG_WINDOW   : int = 231   # 12-month momentum, skip-1-month (days)
 MOM_SKIP_WINDOW   : int = 21    # skip period for long momentum
 VOL_WINDOW        : int = 21    # realised volatility window (days)
 BETA_WINDOW       : int = 60    # rolling beta estimation window (days)
+REV_WINDOW        : int = 5     # short-term reversal window (days)
+HIGH52W_WINDOW    : int = 252   # 52-week high lookback (trading days)
+RVOL_WINDOW       : int = 20    # relative volume normalization window (days)
 
 # ── Signal generation (rolling Ridge) ────────────────────────────────────────
 TRAIN_WINDOW  : int   = 52    # training window in weeks

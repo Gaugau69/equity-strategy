@@ -299,16 +299,35 @@ def estimate_betas(prices: pd.DataFrame, source: str) -> tuple[np.ndarray, pd.Se
 # Pipeline
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _download_volume(tickers: list[str]) -> pd.DataFrame | None:
+    """Download volume data for the clean universe. Returns None on failure."""
+    try:
+        import yfinance as yf
+        raw = yf.download(tickers, start=START, end=END,
+                          auto_adjust=True, progress=False)
+        if isinstance(raw.columns, pd.MultiIndex) and "Volume" in raw.columns.get_level_values(0):
+            return raw["Volume"].sort_index(axis=1)
+    except Exception:
+        pass
+    return None
+
+
 def run_pipeline(prices, betas, market):
     print(f"\n[5/6] Running strategy pipeline...")
 
     print("      Fetching sector map…")
     sector_map = get_sector_map(list(prices.columns))
-    sector_counts = pd.Series(sector_map).value_counts()
-    print(f"      Sectors: {dict(sector_counts)}")
+
+    print("      Downloading volume data…")
+    volume = _download_volume(list(prices.columns))
+    if volume is not None:
+        volume = volume.reindex(prices.index).ffill(limit=5)
+        print(f"      Volume coverage: {volume.notna().mean().mean():.1%}")
+    else:
+        print("      Volume unavailable — skipping RVOL factor")
 
     print("      Computing factors…")
-    fraw   = compute_factors(prices, market)
+    fraw   = compute_factors(prices, market, volume=volume)
     fnorm  = cross_sectional_zscore(fraw)
     print(f"      Factor panel: {fnorm.shape}")
 

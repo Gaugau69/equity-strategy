@@ -83,27 +83,32 @@ def fetch_prices() -> tuple[pd.DataFrame, pd.Series]:
     raw = yf.download(UNIVERSE, start=str(start), end=str(end),
                       auto_adjust=True, progress=False)
     prices = raw["Close"].sort_index(axis=1)
+    volume = raw["Volume"].sort_index(axis=1) if "Volume" in raw.columns.get_level_values(0) else None
 
     # Basic cleaning
     prices = prices.loc[:, prices.notna().mean() >= 0.90]
     prices = prices.ffill(limit=5).dropna(how="any", axis=0)
     print(f"      {len(prices.columns)} stocks × {len(prices)} days")
 
+    if volume is not None:
+        volume = volume.reindex(prices.columns, axis=1).reindex(prices.index).ffill(limit=5)
+
     spy = yf.download("SPY", start=str(start), end=str(end),
                       auto_adjust=True, progress=False)["Close"].squeeze()
     market = spy.reindex(prices.index).ffill()
 
-    return prices, market
+    return prices, volume, market
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Step 2 — Signal
 # ─────────────────────────────────────────────────────────────────────────────
 
-def compute_target_weights(prices: pd.DataFrame, market: pd.Series) -> pd.Series:
+def compute_target_weights(prices: pd.DataFrame, market: pd.Series,
+                           volume: pd.DataFrame | None = None) -> pd.Series:
     print("[2/5] Computing factors…")
     sector_map = get_sector_map(list(prices.columns))
-    fraw  = compute_factors(prices, market)
+    fraw  = compute_factors(prices, market, volume=volume)
     fnorm = cross_sectional_zscore(fraw)
 
     fwd   = prices.pct_change(config.REBAL_FREQ).shift(-config.REBAL_FREQ)
@@ -327,8 +332,8 @@ def main():
     print("=" * 60)
 
     # ── 1-4: Signal pipeline ──────────────────────────────────────────────────
-    prices, market = fetch_prices()
-    target_weights = compute_target_weights(prices, market)
+    prices, volume, market = fetch_prices()
+    target_weights = compute_target_weights(prices, market, volume)
 
     # ── 5: IBKR state ─────────────────────────────────────────────────────────
     if args.skip_ibkr:
