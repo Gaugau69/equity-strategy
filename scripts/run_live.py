@@ -167,7 +167,7 @@ def get_ibkr_state(account_value_override: float | None = None):
     """
     try:
         from ib_insync import IB, Stock, util
-        util.logToConsole(None)
+        util.logToConsole("CRITICAL")
     except ImportError:
         print("  ib_insync not installed — run: pip install ib_insync")
         sys.exit(1)
@@ -185,8 +185,15 @@ def get_ibkr_state(account_value_override: float | None = None):
         nav = account_value_override
     else:
         vals = ib.accountValues()
-        nav_entries = [v for v in vals if v.tag == "NetLiquidation" and v.currency == "USD"]
-        nav = float(nav_entries[0].value) if nav_entries else DEFAULT_ACCOUNT
+        # Try USD first, then any base currency (accounts denominated in EUR, GBP, etc.)
+        nav_usd  = [v for v in vals if v.tag == "NetLiquidation" and v.currency == "USD"]
+        nav_base = [v for v in vals if v.tag == "NetLiquidation" and v.currency not in ("", "BASE", "USD")]
+        if nav_usd:
+            nav = float(nav_usd[0].value)
+        elif nav_base:
+            nav = float(nav_base[0].value)
+        else:
+            nav = DEFAULT_ACCOUNT
     print(f"      Account NAV: ${nav:,.0f}")
 
     # Current positions
@@ -267,7 +274,7 @@ def submit_orders(orders_df: pd.DataFrame, nav: float) -> None:
 
     try:
         from ib_insync import IB, Stock, Order, util
-        util.logToConsole(None)
+        util.logToConsole("CRITICAL")
     except ImportError:
         print("  ib_insync not installed.")
         return
