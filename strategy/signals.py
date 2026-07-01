@@ -21,7 +21,7 @@ from sklearn.linear_model import Ridge
 from sklearn.preprocessing import StandardScaler
 from scipy.stats import spearmanr
 
-from .config import TRAIN_WINDOW, REBAL_FREQ, RIDGE_ALPHA
+from .config import TRAIN_WINDOW, REBAL_FREQ, RIDGE_ALPHA, EWM_HALFLIFE
 
 # IC-proportional weights (signs and magnitudes from empirical IC analysis)
 # All positive here — the DGP has BETA and VOL as positive predictors
@@ -59,29 +59,55 @@ def _composite(factor_dict: dict, tickers: list, date) -> pd.Series:
     return pd.Series(score / total_w, index=tickers)
 
 
+BETA_MEAN = 1.0   # approximate mean of raw betas in the universe
+BETA_STD  = 0.35  # approximate std of raw betas (U(0.5,1.8)→0.375; real→~0.35)
+
+
 def _adapt_weights_from_ic(
     factor_dict: dict,
     factor_names: list,
     fwd_returns: pd.DataFrame,
     dates_train,
     rebal_freq: int,
+    ewm_halflife: int = 26,
+    ic_tstat_min: float = 1.0,
+    market_fwd_returns: pd.Series = None,
 ) -> dict:
     """
     Estimate empirical IC for each factor on the training window.
-    Returns a dict of {factor_name: signed_ic_weight}.
+
+    Improvements:
+      1. Market residualisation — subtract beta_approx × r_market from each
+         stock's return before computing IC.  This removes the common market
+         drift (which confounds the BETA and VOL factor ICs in trending markets)
+         and exposes the true cross-sectional alpha signal.
+         beta_approx = BETA_MEAN + BETA_z × BETA_STD  (reconstructed from the
+         z-scored BETA factor without needing raw values).
+      2. EWM weighting — recent cross-sections count more (half-life =
+         ewm_halflife periods) so weights adapt when the IC regime shifts.
+      3. T-stat filter — factors with |mean IC| × sqrt(N) / std_IC < ic_tstat_min
+         are zeroed, preventing noise-driven bets.
+
+    Returns {factor_name: signed_ic_weight}  (0.0 if below significance).
     """
     ic_by_factor = {f: [] for f in factor_names}
 
     for d in dates_train:
-        d_next_idx = min(
-            list(fwd_returns.index).index(d) + rebal_freq
-            if d in fwd_returns.index else -1,
-            len(fwd_returns) - 1
-        )
-        if d_next_idx < 0:
+        if d not in fwd_returns.index:
             continue
-        d_next = fwd_returns.index[d_next_idx]
-        r = fwd_returns.loc[d_next]
+        r = fwd_returns.loc[d]
+
+        # Market residualisation: r_resid_i = r_i - beta_approx_i × r_market
+        # This changes the cross-sectional rank order and removes market-drift
+        # confounding from the IC of BETA (and correlated) factors.
+        if (market_fwd_returns is not None
+                and d in market_fwd_returns.index
+                and 'BETA' in factor_dict
+                and d in factor_dict['BETA'].index):
+            r_market = float(market_fwd_returns.loc[d])
+            beta_z   = factor_dict['BETA'].loc[d]
+            beta_approx = BETA_MEAN + beta_z * BETA_STD
+            r = r - beta_approx * r_market
 
         for fname in factor_names:
             if fname not in factor_dict:
@@ -97,7 +123,21 @@ def _adapt_weights_from_ic(
     adapted = {}
     for fname in factor_names:
         ics = ic_by_factor[fname]
-        adapted[fname] = np.mean(ics) if ics else 0.0
+        if not ics:
+            adapted[fname] = 0.0
+            continue
+
+        n = len(ics)
+        # EWM weights: index 0 = oldest, index n-1 = newest → age of newest = 0
+        ages = np.arange(n - 1, -1, -1, dtype=float)
+        w    = np.exp(-np.log(2) / max(ewm_halflife, 1) * ages)
+        w   /= w.sum()
+
+        mean_ic = float(np.dot(w, ics))
+        std_ic  = float(np.std(ics)) if n > 1 else 1.0
+        tstat   = abs(mean_ic) * np.sqrt(n) / max(std_ic, 1e-8)
+
+        adapted[fname] = mean_ic if tstat >= ic_tstat_min else 0.0
 
     return adapted
 
@@ -108,14 +148,23 @@ def generate_signals(
     train_window: int = TRAIN_WINDOW,
     rebal_freq: int = REBAL_FREQ,
     alpha: float = RIDGE_ALPHA,
+    ewm_halflife: int = EWM_HALFLIFE,
+    market_fwd_returns: pd.Series = None,
 ) -> pd.DataFrame:
     """
     Blended signal: empirically-adapted composite z-score + Ridge regression.
 
     The composite weights are re-estimated from IC at each rebalancing date
     using the same rolling training window as Ridge — no look-ahead.
+    Ridge training uses exponentially decaying sample weights (half-life =
+    ewm_halflife periods) so that recent observations carry more weight.
+
+    If market_fwd_returns is provided, both IC estimation and Ridge targets
+    are market-residualised (r_resid = r - beta_approx × r_market) to remove
+    the market-drift confound from factor IC estimation.
     """
     factor_dict, factor_names, tickers = _panel_to_3d(factors_norm)
+    beta_col_idx = factor_names.index('BETA') if 'BETA' in factor_names else None
 
     dates       = factors_norm.index
     rebal_dates = dates[train_window * rebal_freq :: rebal_freq]
@@ -138,7 +187,9 @@ def generate_signals(
 
         # ── Empirical composite: re-learn factor signs from IC ─────────────
         adapted_w = _adapt_weights_from_ic(
-            factor_dict, factor_names, fwd_returns, train_dates, rebal_freq
+            factor_dict, factor_names, fwd_returns, train_dates, rebal_freq,
+            ewm_halflife=ewm_halflife,
+            market_fwd_returns=market_fwd_returns,
         )
         total_abs_w = sum(abs(v) for v in adapted_w.values()) or 1.0
 
@@ -152,10 +203,19 @@ def generate_signals(
         # ── Ridge regression ───────────────────────────────────────────────
         X_list, y_list = [], []
         for step in range(t_start, t_idx, rebal_freq):
-            d      = dates[step]
-            d_next = dates[min(step + rebal_freq, len(dates) - 1)]
-            f_row  = _get_X(factor_dict, factor_names, d)
-            r_row  = fwd_returns.loc[d_next].values
+            d     = dates[step]
+            f_row = _get_X(factor_dict, factor_names, d)
+            r_row = fwd_returns.loc[d].values
+
+            # Market residualisation for Ridge targets (same logic as IC)
+            if (market_fwd_returns is not None
+                    and d in market_fwd_returns.index
+                    and beta_col_idx is not None):
+                r_market_d  = float(market_fwd_returns.loc[d])
+                beta_z_d    = f_row[:, beta_col_idx]
+                beta_approx = BETA_MEAN + beta_z_d * BETA_STD
+                r_row = r_row - beta_approx * r_market_d
+
             valid  = np.isfinite(f_row).all(axis=1) & np.isfinite(r_row)
             if valid.sum() < 50:
                 continue
@@ -168,7 +228,15 @@ def generate_signals(
             X_tr = np.vstack(X_list)
             y_tr = np.concatenate(y_list)
             Xs   = scaler.fit_transform(X_tr)
-            model.fit(Xs, y_tr)
+
+            # Exponentially decaying sample weights: recent observations count more.
+            # Weights increase from oldest (index 0) to newest (index -1).
+            n_obs = len(y_tr)
+            ages  = np.arange(n_obs - 1, -1, -1, dtype=float)  # 0 = newest
+            sw    = np.exp(-np.log(2) / max(ewm_halflife, 1) * ages)
+            sw   *= n_obs / sw.sum()  # normalise so mean weight = 1
+
+            model.fit(Xs, y_tr, sample_weight=sw)
 
             f_now     = _get_X(factor_dict, factor_names, t_date)
             valid_now = np.isfinite(f_now).all(axis=1)

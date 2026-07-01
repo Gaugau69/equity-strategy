@@ -28,14 +28,22 @@ BETA_WINDOW       : int = 60    # rolling beta estimation window (days)
 
 # ── Signal generation (rolling Ridge) ────────────────────────────────────────
 TRAIN_WINDOW  : int   = 52    # training window in weeks
-REBAL_FREQ    : int   = 5     # rebalancing frequency in business days (≈ weekly)
-RIDGE_ALPHA   : float = 25.0   # Ridge regularisation strength
+REBAL_FREQ    : int   = 10    # rebalancing frequency in business days (≈ biweekly)
+RIDGE_ALPHA   : float = 25.0  # Ridge regularisation strength
 
 # ── Portfolio construction ────────────────────────────────────────────────────
-TOP_N        : int   = 75    # stocks in long leg = stocks in short leg
-LAMBDA_REG   : float = 1.0    # Markowitz regularisation strength
-MAX_WEIGHT   : float = 0.04   # maximum absolute weight per stock
+TOP_N        : int   = 100   # stocks in long leg = stocks in short leg
+LAMBDA_REG   : float = 10.0  # Markowitz regularisation (higher = more risk aversion)
+MAX_WEIGHT   : float = 0.04  # maximum absolute weight per stock
 
 # ── Backtesting ───────────────────────────────────────────────────────────────
-TRANSACTION_COST_BPS : float = 10.0   # realistic one-way cost   # one-way transaction cost in basis points
-COV_LOOKBACK         : int   = 60     # days for rolling covariance estimation
+TRANSACTION_COST_BPS   : float = 10.0  # one-way spread/impact cost in bps
+SHORT_BORROW_COST_BPS  : float = 50.0  # annual short-borrow fee in bps (~50bps easy-to-borrow)
+COV_LOOKBACK           : int   = 126   # days for rolling covariance (needs > n_stocks for Ledoit-Wolf)
+
+# ── Signal generation ─────────────────────────────────────────────────────────
+EWM_HALFLIFE : int = 26  # Ridge sample-weight half-life in rebalancing periods
+
+# ── Volatility targeting ───────────────────────────────────────────────────────
+VOL_TARGET   : float = 0.05  # annualised portfolio vol target (5 %)
+VOL_LOOKBACK : int   = 10    # days of past portfolio returns used to estimate realized vol

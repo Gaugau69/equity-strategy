@@ -89,16 +89,11 @@ def _rolling_beta(
     -------
     betas : DataFrame aligned with stock_ret
     """
-    betas = pd.DataFrame(index=stock_ret.index, columns=stock_ret.columns, dtype=float)
-
-    for t in range(window, len(stock_ret)):
-        r_s = stock_ret.iloc[t - window : t]
-        r_m = mkt_ret.iloc[t - window : t]
-
-        cov_xy = r_s.subtract(r_s.mean()).multiply(r_m - r_m.mean(), axis=0).mean()
-        var_x  = r_m.var()
-        betas.iloc[t] = cov_xy / var_x if var_x > 0 else 1.0
-
+    roll_cov = stock_ret.rolling(window).cov(mkt_ret)
+    roll_var = mkt_ret.rolling(window).var()
+    betas = roll_cov.div(roll_var, axis=0)
+    # Where variance is zero or missing, fall back to beta = 1.0
+    betas = betas.where(roll_var > 0, 1.0)
     return betas
 
 
@@ -110,8 +105,8 @@ def cross_sectional_zscore(panel: pd.DataFrame) -> pd.DataFrame:
     """
     Normalise each factor cross-sectionally at every date:
 
-        1. Winsorise at ±3 σ
-        2. Subtract cross-sectional mean and divide by cross-sectional std
+        1. Subtract cross-sectional mean and divide by cross-sectional std
+        2. Winsorise at ±3 σ  (clip after z-scoring)
 
     Parameters
     ----------
@@ -123,14 +118,12 @@ def cross_sectional_zscore(panel: pd.DataFrame) -> pd.DataFrame:
     """
     out = panel.copy()
 
-    # panel has MultiIndex columns: (factor_name, ticker)
-    # iterate over the top-level factor names
     factor_names = out.columns.get_level_values(0).unique()
 
     for fname in factor_names:
-        s  = out[fname]          # DataFrame: dates × tickers
-        mu = s.mean(axis=1)      # Series: one mean per date
-        sd = s.std(axis=1)       # Series: one std per date
+        s  = out[fname]
+        mu = s.mean(axis=1)
+        sd = s.std(axis=1)
 
         z = (
             s.subtract(mu, axis=0)
@@ -138,5 +131,58 @@ def cross_sectional_zscore(panel: pd.DataFrame) -> pd.DataFrame:
              .clip(-3, 3)
         )
         out[fname] = z
+
+    return out
+
+
+def orthogonalize_factors(panel: pd.DataFrame) -> pd.DataFrame:
+    """
+    Remove cross-factor linear dependencies by cross-sectional residualisation.
+
+    For each factor f, regress it on all other factors cross-sectionally at
+    every date and replace it with the residual.  This reduces the
+    multicollinearity that degrades Ridge regression coefficients when BETA
+    and VOL_1M are correlated.
+
+    Parameters
+    ----------
+    panel : normalised MultiIndex-column DataFrame (output of cross_sectional_zscore)
+
+    Returns
+    -------
+    orthogonalised panel with same shape
+    """
+    factor_names = panel.columns.get_level_values(0).unique().tolist()
+    if len(factor_names) < 2:
+        return panel
+
+    out = panel.copy()
+
+    for fname in factor_names:
+        others = [f for f in factor_names if f != fname]
+        y_df   = panel[fname].values.astype(float)        # (T, N)
+        X_mats = [panel[f].values.astype(float) for f in others]  # list of (T, N)
+        T, N   = y_df.shape
+        K      = len(others)
+
+        resid = y_df.copy()
+        for t in range(T):
+            y = y_df[t]
+            # Design matrix: intercept + other factors (columns = observations)
+            X = np.column_stack([np.ones(N)] + [X_mats[k][t] for k in range(K)])
+            valid = np.isfinite(y) & np.all(np.isfinite(X[:, 1:]), axis=1)
+            if valid.sum() < K + 5:
+                continue
+            try:
+                beta, _, _, _ = np.linalg.lstsq(X[valid], y[valid], rcond=None)
+                resid[t] = y - X @ beta
+            except np.linalg.LinAlgError:
+                pass
+
+        out[fname] = pd.DataFrame(
+            resid,
+            index=panel.index,
+            columns=panel[fname].columns,
+        )
 
     return out

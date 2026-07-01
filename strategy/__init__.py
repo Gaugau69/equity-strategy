@@ -16,7 +16,7 @@ analytics   : performance metrics, plots, console report
 
 from .config      import *            # noqa: F401,F403
 from .data_loader import simulate_universe, load_from_csv, load_from_yfinance
-from .factors     import compute_factors, cross_sectional_zscore
+from .factors     import compute_factors, cross_sectional_zscore, orthogonalize_factors
 from .signals     import generate_signals
 from .portfolio   import build_portfolio
 from .backtest    import run_backtest, BacktestResult
@@ -24,7 +24,7 @@ from .analytics   import compute_metrics, plot_results, print_report, drawdown_s
 
 __all__ = [
     "simulate_universe", "load_from_csv", "load_from_yfinance",
-    "compute_factors", "cross_sectional_zscore",
+    "compute_factors", "cross_sectional_zscore", "orthogonalize_factors",
     "generate_signals",
     "build_portfolio",
     "run_backtest", "BacktestResult",

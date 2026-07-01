@@ -113,15 +113,17 @@ def run_walkforward(prices: pd.DataFrame, betas: np.ndarray) -> dict:
         fraw_w  = compute_factors(prices_w, market_w)
         fnorm_w = cross_sectional_zscore(fraw_w)
         fwd_w   = prices_w.pct_change(config.REBAL_FREQ).shift(-config.REBAL_FREQ)
+        fwd_mkt_w = market_w.pct_change(config.REBAL_FREQ).shift(-config.REBAL_FREQ)
 
         # Generate signals — training window only sees train data internally
         # (rolling Ridge uses config.TRAIN_WINDOW weeks, which stays within train period)
         print("  Generating signals...")
         signals_w = generate_signals(
             fnorm_w, fwd_w,
-            train_window = config.TRAIN_WINDOW,
-            rebal_freq   = config.REBAL_FREQ,
-            alpha        = config.RIDGE_ALPHA,
+            train_window       = config.TRAIN_WINDOW,
+            rebal_freq         = config.REBAL_FREQ,
+            alpha              = config.RIDGE_ALPHA,
+            market_fwd_returns = fwd_mkt_w,
         )
 
         if len(signals_w) == 0:

@@ -81,11 +81,13 @@ def main() -> None:
     # ── 3. Forward returns & signals ──────────────────────────────────────
     print("\n[3/5] Generating signals (rolling Ridge)…")
     fwd_returns = prices.pct_change(config.REBAL_FREQ).shift(-config.REBAL_FREQ)
+    fwd_market  = market_prices.pct_change(config.REBAL_FREQ).shift(-config.REBAL_FREQ)
     signals     = generate_signals(
         factors_norm, fwd_returns,
-        train_window = config.TRAIN_WINDOW,
-        rebal_freq   = config.REBAL_FREQ,
-        alpha        = config.RIDGE_ALPHA,
+        train_window       = config.TRAIN_WINDOW,
+        rebal_freq         = config.REBAL_FREQ,
+        alpha              = config.RIDGE_ALPHA,
+        market_fwd_returns = fwd_market,
     )
     print(f"      {len(signals)} rebalancing dates generated")
 

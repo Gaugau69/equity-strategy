@@ -176,9 +176,10 @@ def run_regime(regime_name: str, seed: int = 42) -> dict:
     print(f"  {desc}")
 
     # Factors & signals
-    fraw   = compute_factors(prices, market)
-    fnorm  = cross_sectional_zscore(fraw)
-    fwd    = prices.pct_change(config.REBAL_FREQ).shift(-config.REBAL_FREQ)
+    fraw    = compute_factors(prices, market)
+    fnorm   = cross_sectional_zscore(fraw)
+    fwd     = prices.pct_change(config.REBAL_FREQ).shift(-config.REBAL_FREQ)
+    fwd_mkt = market.pct_change(config.REBAL_FREQ).shift(-config.REBAL_FREQ)
 
     # Measure factor IC before running backtest
     factor_dict, _, tickers = _panel_to_3d(fnorm)
@@ -198,9 +199,10 @@ def run_regime(regime_name: str, seed: int = 42) -> dict:
     try:
         signals = generate_signals(
             fnorm, fwd,
-            train_window = config.TRAIN_WINDOW,
-            rebal_freq   = config.REBAL_FREQ,
-            alpha        = config.RIDGE_ALPHA,
+            train_window       = config.TRAIN_WINDOW,
+            rebal_freq         = config.REBAL_FREQ,
+            alpha              = config.RIDGE_ALPHA,
+            market_fwd_returns = fwd_mkt,
         )
         if len(signals) < 5:
             raise ValueError("Too few signals")
@@ -300,8 +302,8 @@ def print_stress_report(results: list[dict]) -> None:
 def plot_stress(results: list[dict]) -> plt.Figure:
     valid = [r for r in results if r.get("nav") is not None]
 
-    fig = plt.figure(figsize=(16, 10), facecolor="#0d1117")
-    gs  = gridspec.GridSpec(3, 3, hspace=0.55, wspace=0.35, figure=fig)
+    fig = plt.figure(figsize=(16, 12), facecolor="#0d1117")
+    gs  = gridspec.GridSpec(4, 3, hspace=0.55, wspace=0.35, figure=fig)
 
     colors = ["#00d4ff", "#f87171", "#fb923c", "#a78bfa", "#4ade80"]
 
@@ -348,16 +350,9 @@ def plot_stress(results: list[dict]) -> plt.Figure:
     ax4.set_yticklabels(names, color="#888", fontsize=8)
     ax4.set_title("Mkt correlation", color="white", fontsize=10)
 
-    # ── 5-9. Drawdown per regime ──────────────────────────────────────────────
+    # ── 5-9. Drawdown per regime (rows 2-3, up to 3 per row) ─────────────────
     for i, (r, col) in enumerate(zip(valid, colors)):
-        row = 2
-        col_idx = i % 3
-        if i >= 3:
-            row = 2
-            col_idx = i - 3 + (3 - len(valid) % 3 if len(valid) % 3 != 0 else 0)
-        ax = fig.add_subplot(gs[2, i % 3]) if i < 3 else None
-        if ax is None:
-            continue
+        ax = fig.add_subplot(gs[2 + i // 3, i % 3])
         dd = drawdown_series(r["nav"]) * 100
         ax.fill_between(dd.index, 0, dd.values, color=col, alpha=0.5)
         ax.set_title(r["regime"], color="white", fontsize=9)

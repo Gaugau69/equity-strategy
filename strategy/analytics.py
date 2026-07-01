@@ -125,9 +125,8 @@ def plot_results(result) -> plt.Figure:
 
     # ── 3. Rolling Sharpe (63-day) ─────────────────────────────────────────
     ax = axes[2]
-    roll_sr = (
-        returns.rolling(63).mean() / returns.rolling(63).std()
-    ) * np.sqrt(ANN)
+    roll_std = returns.rolling(63).std().replace(0, np.nan)
+    roll_sr  = (returns.rolling(63).mean() / roll_std) * np.sqrt(ANN)
     ax.plot(roll_sr.index, roll_sr.values, color="#f5a623", lw=1.2)
     ax.axhline(0, color="#555", lw=0.8, ls="--")
     ax.set_title("Rolling 63-day Sharpe Ratio", color="white", fontsize=11, pad=6)

@@ -51,8 +51,7 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 START   = "2018-01-01"
 END     = "2024-12-31"
 
-# ── S&P 500 tickers (hardcoded — no Wikipedia needed) ─────────────────────
-SP500_TICKERS = [
+_SP500_FALLBACK = [
     "AAPL","MSFT","AMZN","NVDA","GOOGL","GOOG","META","BRK-B","TSLA","UNH",
     "XOM","LLY","JPM","JNJ","V","PG","MA","AVGO","HD","CVX","MRK","ABBV",
     "COST","PEP","KO","WMT","CSCO","TMO","MCD","ACN","BAC","ABT","CRM","NFLX",
@@ -68,24 +67,37 @@ SP500_TICKERS = [
     "DFS","SYF","AMP","LHX","GD","LMT","BA","TDG","CARR","OTIS","ROP","AME",
     "PH","ROK","DOV","XYL","GWW","FAST","SWK","IR","A","KEYS","IDXX","MTD",
     "WAT","TER","SPG","AMT","CCI","EQIX","DLR","O","WELL","VTR","MAA","EQR",
-    "AVB","MGM","WYNN","LVS","RSG","WCN","CLX","CHD","EL","KMB","TSN","GIS",
-    "K","KHC","MKC","HSY","STZ","WBA","MCK","DGX","LH","IQV","F","GM","TM",
-    "HMC","RACE","FCAU","HOG","CMI","PCAR","OSK","WNC","ALSN","BWA","LEA",
-    "MGA","DAN","AXL","GPC","LKQ","AAP","O'REILLY","KMX","AN","LAD","SAH",
-    "ABG","PAG","SIC","CAR","HTZ","URI","GATX","R","AL","FLY","GATX",
-    "UNP","CSX","NSC","KSU","WAB","TRN","GNSS","LSTR","CHRW","XPO","JBHT",
-    "SAIA","ODFL","WERN","MRTN","KNX","HTLD","ARCB","ECHO","FWRD","HUBG",
-    "SIC","LPX","PCH","RYN","WY","PH","VMC","MLM","EXP","SUM","USCR",
-    "BECN","IBP","BLDR","SIC","OC","AWI","PGTI","APOG","TREX","AZEK","UFP",
-    "AOS","MAS","FBM","FBHS","DOOR","ALLE","SIC","IP","PKG","SON","SEE",
-    "GPK","BERY","AEP","EXC","D","SRE","PEG","FE","ES","ETR","EIX","PPL",
-    "CNP","NI","AEE","LNT","EVRG","WEC","DTE","CMS","NWE","IDA","AVA","NWN",
-    "SJW","YORW","MSEX","ARTNA","GWRS","AWR","CWT","SIC",
+    "AVB","RSG","WCN","CLX","CHD","EL","KMB","TSN","GIS","K","KHC","MKC",
+    "HSY","STZ","MCK","DGX","LH","IQV","F","GM","HOG","CMI","PCAR","URI",
+    "UNP","WAB","LSTR","CHRW","XPO","JBHT","SAIA","ODFL","KNX",
+    "VMC","MLM","OC","IP","PKG","SEE","AEP","EXC","D","SRE","PEG","FE",
+    "ES","ETR","EIX","PPL","CNP","NI","AEE","WEC","DTE","CMS",
 ]
-# Deduplicate and clean
-SP500_TICKERS = list(dict.fromkeys(
-    t for t in SP500_TICKERS if t and "SIC" not in t and "/" not in t
-))
+
+
+def _get_sp500_tickers() -> list[str]:
+    """Fetch current S&P 500 tickers from Wikipedia; fall back to curated list."""
+    try:
+        tables = pd.read_html(
+            "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies",
+            attrs={"id": "constituents"},
+        )
+        tickers = (
+            tables[0]["Symbol"]
+            .astype(str)
+            .str.strip()
+            .str.replace(".", "-", regex=False)
+            .tolist()
+        )
+        if len(tickers) > 400:
+            print(f"      Fetched {len(tickers)} tickers from Wikipedia")
+            return tickers
+    except Exception as e:
+        print(f"      Wikipedia fetch failed ({e}) — using curated fallback list")
+    return list(dict.fromkeys(_SP500_FALLBACK))
+
+
+SP500_TICKERS = _get_sp500_tickers()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -242,8 +254,10 @@ def estimate_betas(prices: pd.DataFrame, source: str) -> tuple[np.ndarray, pd.Se
         try:
             if source in ("yfinance", "auto"):
                 import yfinance as yf
-                spy    = yf.download("SPY", start=START, end=END,
-                                     auto_adjust=True, progress=False)["Close"]
+                spy = yf.download("SPY", start=START, end=END,
+                                  auto_adjust=True, progress=False)["Close"]
+                if isinstance(spy, pd.DataFrame):
+                    spy = spy.squeeze()
                 market = spy.reindex(prices.index).ffill()
             elif source == "stooq":
                 import pandas_datareader as pdr
@@ -253,7 +267,7 @@ def estimate_betas(prices: pd.DataFrame, source: str) -> tuple[np.ndarray, pd.Se
             pass
 
     # Fallback: equal-weight index
-    if market is None or market.isna().mean() > 0.5:
+    if market is None or float(market.isna().mean().mean() if isinstance(market, pd.DataFrame) else market.isna().mean()) > 0.5:
         print("      SPY unavailable — using equal-weight index as market proxy")
         market = prices.mean(axis=1)
 
@@ -286,19 +300,26 @@ def run_pipeline(prices, betas, market):
     fnorm  = cross_sectional_zscore(fraw)
     print(f"      Factor panel: {fnorm.shape}")
 
-    fwd    = prices.pct_change(config.REBAL_FREQ).shift(-config.REBAL_FREQ)
+    fwd     = prices.pct_change(config.REBAL_FREQ).shift(-config.REBAL_FREQ)
+    fwd_mkt = market.pct_change(config.REBAL_FREQ).shift(-config.REBAL_FREQ)
+
+    # Cap top_n at ~12% of universe (each leg should be a concentrated decile)
+    n_stocks = len(prices.columns)
+    top_n    = max(10, min(config.TOP_N, n_stocks // 8))
+    print(f"      Universe: {n_stocks} stocks → top_n={top_n} per leg")
 
     print("      Generating signals (rolling Ridge)...")
     signals = generate_signals(fnorm, fwd,
                                train_window=config.TRAIN_WINDOW,
                                rebal_freq=config.REBAL_FREQ,
-                               alpha=config.RIDGE_ALPHA)
+                               alpha=config.RIDGE_ALPHA,
+                               market_fwd_returns=fwd_mkt)
     print(f"      {len(signals)} rebalancing dates")
 
     print("      Running backtest...")
     result = run_backtest(prices, signals, betas,
                           transaction_cost_bps=config.TRANSACTION_COST_BPS,
-                          top_n=config.TOP_N, lambda_reg=config.LAMBDA_REG)
+                          top_n=top_n, lambda_reg=config.LAMBDA_REG)
     return result
 
 

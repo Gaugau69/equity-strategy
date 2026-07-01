@@ -49,6 +49,7 @@ BASELINE = {
     "REBAL_FREQ":   config.REBAL_FREQ,
     "TC_BPS":       config.TRANSACTION_COST_BPS,
     "TRAIN_WINDOW": config.TRAIN_WINDOW,
+    "LAMBDA_REG":   config.LAMBDA_REG,
 }
 
 # ── Parameter grid (one dimension at a time) ─────────────────────────────────
@@ -58,6 +59,7 @@ PARAM_GRID = {
     "REBAL_FREQ":   [5, 10, 21],
     "TC_BPS":       [5.0, 10.0, 20.0, 30.0],
     "TRAIN_WINDOW": [26, 52, 78],
+    "LAMBDA_REG":   [5.0, 10.0, 25.0, 50.0, 100.0],
 }
 
 KEY_METRICS = ["Sharpe Ratio", "Annualised Return (%)", "Max Drawdown (%)", "Calmar Ratio"]
@@ -69,7 +71,8 @@ KEY_METRICS = ["Sharpe Ratio", "Annualised Return (%)", "Max Drawdown (%)", "Cal
 
 def single_run(prices, betas, market, params: dict) -> dict:
     """Run full pipeline with given params and return metrics."""
-    fwd = prices.pct_change(params["REBAL_FREQ"]).shift(-params["REBAL_FREQ"])
+    fwd     = prices.pct_change(params["REBAL_FREQ"]).shift(-params["REBAL_FREQ"])
+    fwd_mkt = market.pct_change(params["REBAL_FREQ"]).shift(-params["REBAL_FREQ"])
 
     # Recompute factors only if needed (always here for simplicity)
     fraw  = compute_factors(prices, market)
@@ -78,9 +81,10 @@ def single_run(prices, betas, market, params: dict) -> dict:
     try:
         signals = generate_signals(
             fnorm, fwd,
-            train_window = params["TRAIN_WINDOW"],
-            rebal_freq   = params["REBAL_FREQ"],
-            alpha        = params["RIDGE_ALPHA"],
+            train_window       = params["TRAIN_WINDOW"],
+            rebal_freq         = params["REBAL_FREQ"],
+            alpha              = params["RIDGE_ALPHA"],
+            market_fwd_returns = fwd_mkt,
         )
         if len(signals) < 5:
             return {}
@@ -89,7 +93,7 @@ def single_run(prices, betas, market, params: dict) -> dict:
             prices, signals, betas,
             transaction_cost_bps = params["TC_BPS"],
             top_n      = params["TOP_N"],
-            lambda_reg = config.LAMBDA_REG,
+            lambda_reg = params["LAMBDA_REG"],
         )
         return result.metrics
     except Exception as e:
@@ -103,7 +107,6 @@ def single_run(prices, betas, market, params: dict) -> dict:
 
 def run_sensitivity(prices, betas, market) -> pd.DataFrame:
     records = []
-    total_runs = sum(len(v) for v in PARAM_GRID.items())
 
     print(f"\n  Baseline params: {BASELINE}")
     print(f"  Total runs: {sum(len(v) for v in PARAM_GRID.values())} + 1 baseline\n")
@@ -207,7 +210,7 @@ def plot_sensitivity(df: pd.DataFrame, base_metrics: dict) -> plt.Figure:
         sub["value_num"] = pd.to_numeric(sub["value"], errors="coerce")
         sub = sub.sort_values("value_num")
 
-        values  = sub["value"].astype(float).tolist()
+        values  = sub["value_num"].tolist()
         sharpes = sub["Sharpe Ratio"].tolist()
         colors  = ["#f5a623" if v == BASELINE[param_name] else
                    "#4ade80" if s > 0 else "#f87171"
