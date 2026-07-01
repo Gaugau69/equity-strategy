@@ -29,7 +29,7 @@ BETA_WINDOW       : int = 60    # rolling beta estimation window (days)
 # ── Signal generation (rolling Ridge) ────────────────────────────────────────
 TRAIN_WINDOW  : int   = 52    # training window in weeks
 REBAL_FREQ    : int   = 10    # rebalancing frequency in business days (≈ biweekly)
-RIDGE_ALPHA   : float = 25.0  # Ridge regularisation strength
+RIDGE_ALPHA   : float = 100.0  # Ridge regularisation strength
 
 # ── Portfolio construction ────────────────────────────────────────────────────
 TOP_N        : int   = 100   # stocks in long leg = stocks in short leg
