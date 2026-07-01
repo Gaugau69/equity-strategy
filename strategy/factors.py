@@ -38,6 +38,7 @@ def compute_factors(
     prices: pd.DataFrame,
     market_prices: pd.Series,
     volume: pd.DataFrame | None = None,
+    fundamental_panel: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """
     Compute raw factor values for every stock on every date.
@@ -84,6 +85,16 @@ def compute_factors(
         avg_vol = volume.rolling(RVOL_WINDOW, min_periods=5).mean()
         factors["RVOL"] = volume / avg_vol.replace(0, np.nan)
         factors["RVOL"] = factors["RVOL"].reindex(prices.index)
+
+    # ── Fundamental factors (optional — from SEC EDGAR) ───────────────────────
+    if fundamental_panel is not None:
+        fund_factors = fundamental_panel.columns.get_level_values(0).unique()
+        for fname in fund_factors:
+            # Forward-fill so each daily row carries the latest filed value
+            aligned = (fundamental_panel[fname]
+                       .reindex(prices.index)
+                       .ffill(limit=63))       # stale after ~3 months
+            factors[fname] = aligned.reindex(columns=prices.columns)
 
     panel = pd.concat(factors, axis=1)
     return panel

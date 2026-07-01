@@ -26,14 +26,16 @@ from .config import TRAIN_WINDOW, REBAL_FREQ, RIDGE_ALPHA, EWM_HALFLIFE
 # IC-proportional weights (signs and magnitudes from empirical IC analysis)
 # All positive here — the DGP has BETA and VOL as positive predictors
 FACTOR_WEIGHTS = {
-    "MOM_1M":   0.10,
-    "MOM_3M":   0.10,
-    "MOM_12M":  0.25,
-    "VOL_1M":   0.20,
-    "BETA":     0.35,
-    "REV_1W":  -0.10,   # contrarian: short-term losers tend to revert
-    "HIGH_52W": 0.15,   # stocks near 52W high show momentum continuation
-    "RVOL":     0.05,   # relative volume: high vol = institutional interest
+    "MOM_1M":    0.08,
+    "MOM_3M":    0.08,
+    "MOM_12M":   0.20,
+    "VOL_1M":    0.15,
+    "BETA":      0.27,
+    "REV_1W":   -0.10,   # contrarian (not in SIGNAL_FACTORS — kept as reference)
+    "HIGH_52W":  0.15,   # 52W high proximity (not in SIGNAL_FACTORS)
+    "RVOL":      0.05,   # relative volume (not in SIGNAL_FACTORS)
+    "EPS_MOM":   0.10,   # YoY EPS growth — post-earnings drift
+    "ASSET_GRW":-0.07,   # YoY asset growth — lower is better (quality)
 }
 
 BLEND_RIDGE     = 0.35
@@ -43,6 +45,7 @@ BLEND_COMPOSITE = 0.65
 # REV_1W has a negative prior weight — contrarian signal.
 # HIGH_52W and RVOL are added as supplementary alpha signals.
 SIGNAL_FACTORS = ["MOM_1M", "MOM_3M", "MOM_12M", "VOL_1M", "BETA"]
+RIDGE_FACTORS  = SIGNAL_FACTORS
 
 
 def _panel_to_3d(factors_norm: pd.DataFrame):
@@ -172,10 +175,10 @@ def generate_signals(
     the market-drift confound from factor IC estimation.
     """
     factor_dict, factor_names, tickers = _panel_to_3d(factors_norm)
-    # Separate signal factors (predictors) from residualisation-only factors (BETA)
     sig_factors  = [f for f in factor_names if f in SIGNAL_FACTORS]
-    beta_col_all = factor_names.index('BETA') if 'BETA' in factor_names else None
-    sig_cols     = [factor_names.index(f) for f in sig_factors]
+    ridge_factors = [f for f in factor_names if f in RIDGE_FACTORS]
+    beta_col_all  = factor_names.index('BETA') if 'BETA' in factor_names else None
+    sig_cols      = [factor_names.index(f) for f in ridge_factors]
 
     dates       = factors_norm.index
     rebal_dates = dates[train_window * rebal_freq :: rebal_freq]
@@ -211,12 +214,12 @@ def generate_signals(
                 score += (w / total_abs_w) * np.nan_to_num(vals, nan=0.0)
         composite = pd.Series(score, index=tickers)
 
-        # ── Ridge regression (X = signal factors only, not BETA) ──────────
+        # ── Ridge regression (X = price-based RIDGE_FACTORS only) ───────────
         X_list, y_list = [], []
         for step in range(t_start, t_idx, rebal_freq):
             d     = dates[step]
             f_all = _get_X(factor_dict, factor_names, d)   # all factors
-            f_row = f_all[:, sig_cols]                      # signal factors only
+            f_row = f_all[:, sig_cols]                      # ridge factors only
             r_row = fwd_returns.loc[d].values
 
             # Market residualisation uses the full BETA column

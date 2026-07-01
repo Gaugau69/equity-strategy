@@ -45,6 +45,7 @@ from strategy.signals  import generate_signals
 from strategy.backtest import run_backtest
 from strategy.analytics import print_report, plot_results
 from strategy.sectors  import get_sector_map
+from strategy.edgar    import download_fundamentals, build_fundamental_factors
 from strategy import config
 
 OUT_DIR = Path("outputs/real")
@@ -326,8 +327,28 @@ def run_pipeline(prices, betas, market):
     else:
         print("      Volume unavailable — skipping RVOL factor")
 
+    print("      Downloading SEC EDGAR fundamentals…")
+    try:
+        tickers = list(prices.columns)
+        fundamentals = download_fundamentals(tickers)
+        rebal_dates  = prices.index[
+            range(config.TRAIN_WINDOW * config.REBAL_FREQ,
+                  len(prices), config.REBAL_FREQ)
+        ]
+        fund_panel = build_fundamental_factors(fundamentals, rebal_dates, tickers)
+        eps_cov    = fund_panel["EPS_MOM"].notna().mean().mean()
+        ast_cov    = fund_panel["ASSET_GRW"].notna().mean().mean()
+        print(f"      EPS_MOM coverage: {eps_cov:.1%}  |  ASSET_GRW coverage: {ast_cov:.1%}")
+        if eps_cov < 0.10:
+            print("      Coverage too low — skipping fundamental factors")
+            fund_panel = None
+    except Exception as e:
+        print(f"      EDGAR download failed ({e}) — skipping fundamental factors")
+        fund_panel = None
+
     print("      Computing factors…")
-    fraw   = compute_factors(prices, market, volume=volume)
+    fraw   = compute_factors(prices, market, volume=volume,
+                             fundamental_panel=fund_panel)
     fnorm  = cross_sectional_zscore(fraw)
     print(f"      Factor panel: {fnorm.shape}")
 
