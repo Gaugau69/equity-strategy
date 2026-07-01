@@ -36,6 +36,12 @@ FACTOR_WEIGHTS = {
 BLEND_RIDGE     = 0.35
 BLEND_COMPOSITE = 0.65
 
+# Factors used for alpha signal generation (all computed factors).
+# BETA is included as a predictor — its IC is estimated on market-residualised
+# returns so the coefficient reflects true cross-sectional alpha, not the
+# market-drift premium.
+SIGNAL_FACTORS = ["MOM_1M", "MOM_3M", "MOM_12M", "VOL_1M", "BETA"]
+
 
 def _panel_to_3d(factors_norm: pd.DataFrame):
     factor_names = factors_norm.columns.get_level_values(0).unique().tolist()
@@ -164,7 +170,10 @@ def generate_signals(
     the market-drift confound from factor IC estimation.
     """
     factor_dict, factor_names, tickers = _panel_to_3d(factors_norm)
-    beta_col_idx = factor_names.index('BETA') if 'BETA' in factor_names else None
+    # Separate signal factors (predictors) from residualisation-only factors (BETA)
+    sig_factors  = [f for f in factor_names if f in SIGNAL_FACTORS]
+    beta_col_all = factor_names.index('BETA') if 'BETA' in factor_names else None
+    sig_cols     = [factor_names.index(f) for f in sig_factors]
 
     dates       = factors_norm.index
     rebal_dates = dates[train_window * rebal_freq :: rebal_freq]
@@ -185,9 +194,9 @@ def generate_signals(
 
         train_dates = dates[t_start : t_idx : rebal_freq]
 
-        # ── Empirical composite: re-learn factor signs from IC ─────────────
+        # ── Empirical composite: IC only for signal factors (not BETA) ─────
         adapted_w = _adapt_weights_from_ic(
-            factor_dict, factor_names, fwd_returns, train_dates, rebal_freq,
+            factor_dict, sig_factors, fwd_returns, train_dates, rebal_freq,
             ewm_halflife=ewm_halflife,
             market_fwd_returns=market_fwd_returns,
         )
@@ -200,19 +209,20 @@ def generate_signals(
                 score += (w / total_abs_w) * np.nan_to_num(vals, nan=0.0)
         composite = pd.Series(score, index=tickers)
 
-        # ── Ridge regression ───────────────────────────────────────────────
+        # ── Ridge regression (X = signal factors only, not BETA) ──────────
         X_list, y_list = [], []
         for step in range(t_start, t_idx, rebal_freq):
             d     = dates[step]
-            f_row = _get_X(factor_dict, factor_names, d)
+            f_all = _get_X(factor_dict, factor_names, d)   # all factors
+            f_row = f_all[:, sig_cols]                      # signal factors only
             r_row = fwd_returns.loc[d].values
 
-            # Market residualisation for Ridge targets (same logic as IC)
+            # Market residualisation uses the full BETA column
             if (market_fwd_returns is not None
                     and d in market_fwd_returns.index
-                    and beta_col_idx is not None):
+                    and beta_col_all is not None):
                 r_market_d  = float(market_fwd_returns.loc[d])
-                beta_z_d    = f_row[:, beta_col_idx]
+                beta_z_d    = f_all[:, beta_col_all]
                 beta_approx = BETA_MEAN + beta_z_d * BETA_STD
                 r_row = r_row - beta_approx * r_market_d
 
@@ -238,7 +248,8 @@ def generate_signals(
 
             model.fit(Xs, y_tr, sample_weight=sw)
 
-            f_now     = _get_X(factor_dict, factor_names, t_date)
+            f_now_all = _get_X(factor_dict, factor_names, t_date)
+            f_now     = f_now_all[:, sig_cols]             # signal factors only
             valid_now = np.isfinite(f_now).all(axis=1)
             scores    = np.full(len(tickers), np.nan)
             scores[valid_now] = model.predict(scaler.transform(f_now[valid_now]))
