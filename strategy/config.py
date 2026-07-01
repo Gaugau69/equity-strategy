@@ -42,7 +42,7 @@ SHORT_BORROW_COST_BPS  : float = 50.0  # annual short-borrow fee in bps (~50bps 
 COV_LOOKBACK           : int   = 126   # days for rolling covariance (needs > n_stocks for Ledoit-Wolf)
 
 # ── Signal generation ─────────────────────────────────────────────────────────
-EWM_HALFLIFE : int = 26  # Ridge sample-weight half-life in rebalancing periods
+EWM_HALFLIFE : int = 52  # Ridge sample-weight half-life in rebalancing periods
 
 # ── Volatility targeting ───────────────────────────────────────────────────────
 VOL_TARGET   : float = 0.05  # annualised portfolio vol target (5 %)
