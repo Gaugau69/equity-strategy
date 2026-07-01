@@ -63,6 +63,7 @@ def run_backtest(
     cov_lookback: int = COV_LOOKBACK,
     vol_target: float | None = VOL_TARGET,
     vol_lookback: int = VOL_LOOKBACK,
+    sector_map: dict[str, str] | None = None,
 ) -> BacktestResult:
     """
     Simulate the strategy over the full backtest period.
@@ -150,6 +151,7 @@ def run_backtest(
             tickers,
             top_n=top_n,
             lambda_reg=lambda_reg,
+            sector_map=sector_map,
         )
 
         # ── Volatility targeting (backward-looking realized vol) ───────────

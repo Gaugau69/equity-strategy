@@ -41,6 +41,7 @@ import yfinance as yf
 from strategy.factors  import compute_factors, cross_sectional_zscore
 from strategy.signals  import generate_signals
 from strategy.portfolio import build_portfolio
+from strategy.sectors  import get_sector_map
 from strategy           import config
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -101,6 +102,7 @@ def fetch_prices() -> tuple[pd.DataFrame, pd.Series]:
 
 def compute_target_weights(prices: pd.DataFrame, market: pd.Series) -> pd.Series:
     print("[2/5] Computing factors…")
+    sector_map = get_sector_map(list(prices.columns))
     fraw  = compute_factors(prices, market)
     fnorm = cross_sectional_zscore(fraw)
 
@@ -143,6 +145,7 @@ def compute_target_weights(prices: pd.DataFrame, market: pd.Series) -> pd.Series
         list(prices.columns),
         top_n      = top_n,
         lambda_reg = config.LAMBDA_REG,
+        sector_map = sector_map,
     )
 
     # Print summary

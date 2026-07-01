@@ -46,31 +46,47 @@ def _solve_markowitz(
     n_long: int,
     lambda_reg: float,
     max_weight: float,
+    sector_ids: np.ndarray | None = None,
+    sector_lambda: float = 2.0,
 ) -> np.ndarray:
     """
     Solve the mean-variance QP over the selected subset (dollar-neutral only).
 
     Variables : w ∈ R^n_sel  (first n_long = long leg, rest = short leg)
-    Objective : min  λ̃ w'Σw − α'w        where λ̃ = λ * mean(diag Σ)
+    Objective : min  λ̃ w'Σw − α'w  +  μ Σ_s (Σ_{i∈s} w_i)²
     Subject to:
         Σw_i  = 0                         (dollar-neutral)
         0 ≤ w_i ≤ max_weight  ∀ i < n_long
         −max_weight ≤ w_i ≤ 0  ∀ i ≥ n_long
+
+    The sector penalty (coefficient μ = sector_lambda × λ̃) softly pushes
+    the net sector exposure toward zero without hard constraints that could
+    make the QP infeasible when a sector has few selected stocks.
 
     Beta neutrality is NOT enforced here — it is applied post-hoc via
     leg scaling so as not to constrain the alpha-seeking step.
     """
     n_sel = len(alpha_sel)
 
-    # Scale λ so it is dimensionless relative to the alpha scale
     cov_scale = max(float(np.diag(cov_sel).mean()), 1e-8)
     lam = lambda_reg * cov_scale
 
+    unique_sectors = np.unique(sector_ids) if sector_ids is not None else None
+
     def objective(w: np.ndarray) -> float:
-        return lam * float(w @ cov_sel @ w) - float(alpha_sel @ w)
+        val = lam * float(w @ cov_sel @ w) - float(alpha_sel @ w)
+        if unique_sectors is not None:
+            for s in unique_sectors:
+                val += sector_lambda * lam * float(w[sector_ids == s].sum()) ** 2
+        return val
 
     def grad(w: np.ndarray) -> np.ndarray:
-        return 2.0 * lam * (cov_sel @ w) - alpha_sel
+        g = 2.0 * lam * (cov_sel @ w) - alpha_sel
+        if unique_sectors is not None:
+            for s in unique_sectors:
+                mask = sector_ids == s
+                g[mask] += 2.0 * sector_lambda * lam * float(w[mask].sum())
+        return g
 
     constraints = [
         {
@@ -85,7 +101,6 @@ def _solve_markowitz(
         + [(-max_weight, 0.0)] * (n_sel - n_long)
     )
 
-    # Warm-start: uniform gross-0.5 each leg (satisfies dollar-neutrality)
     w0 = np.zeros(n_sel)
     w0[:n_long] = 0.5 / n_long
     w0[n_long:] = -0.5 / (n_sel - n_long)
@@ -195,12 +210,14 @@ def build_portfolio(
     top_n: int = TOP_N,
     lambda_reg: float = LAMBDA_REG,
     max_weight: float = MAX_WEIGHT,
+    sector_map: dict[str, str] | None = None,
 ) -> pd.Series:
     """
     Construct a dollar-neutral, beta-neutral long/short portfolio.
 
     1. Pre-select top_n long + top_n short by signal rank.
-    2. Solve mean-variance QP (Markowitz) over that subset.
+    2. Solve mean-variance QP (Markowitz) over that subset, with an optional
+       soft sector-neutrality penalty when sector_map is provided.
     3. Apply beta neutralisation via short-leg scaling.
 
     Returns weights with:
@@ -224,13 +241,16 @@ def build_portfolio(
     ticker_to_int = {t: i for i, t in enumerate(tickers)}
     sel_int  = [ticker_to_int[t] for t in all_sel if t in ticker_to_int]
     cov_sel  = cov_matrix[np.ix_(sel_int, sel_int)]
-    cov_sel  = cov_sel + 1e-6 * np.eye(len(all_sel))  # small diagonal regularisation
+    cov_sel  = cov_sel + 1e-6 * np.eye(len(all_sel))
 
-    alpha_sel = signals_t.reindex(all_sel).fillna(0.0).values
+    alpha_sel  = signals_t.reindex(all_sel).fillna(0.0).values
+    sector_ids = (np.array([sector_map.get(t, "Unknown") for t in all_sel])
+                  if sector_map is not None else None)
 
     # ── Markowitz step ────────────────────────────────────────────────────────
     try:
-        w_opt = _solve_markowitz(alpha_sel, cov_sel, n_long, lambda_reg, max_weight)
+        w_opt = _solve_markowitz(alpha_sel, cov_sel, n_long, lambda_reg,
+                                 max_weight, sector_ids)
         valid_sol = np.isfinite(w_opt).all() and np.abs(w_opt).sum() > 1e-8
     except Exception:
         valid_sol = False
@@ -243,7 +263,6 @@ def build_portfolio(
         if gross > 1e-8:
             weights /= gross
     else:
-        # Fallback: rank-proportional weights
         weights = _rank_weights(long_idx, short_idx, ranked, tickers, max_weight)
 
     # ── Beta neutralisation (post-hoc leg scaling) ────────────────────────────

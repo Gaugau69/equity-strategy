@@ -44,6 +44,7 @@ from strategy.factors  import compute_factors, cross_sectional_zscore
 from strategy.signals  import generate_signals
 from strategy.backtest import run_backtest
 from strategy.analytics import print_report, plot_results
+from strategy.sectors  import get_sector_map
 from strategy import config
 
 OUT_DIR = Path("outputs/real")
@@ -301,7 +302,12 @@ def estimate_betas(prices: pd.DataFrame, source: str) -> tuple[np.ndarray, pd.Se
 def run_pipeline(prices, betas, market):
     print(f"\n[5/6] Running strategy pipeline...")
 
-    print("      Computing factors...")
+    print("      Fetching sector map…")
+    sector_map = get_sector_map(list(prices.columns))
+    sector_counts = pd.Series(sector_map).value_counts()
+    print(f"      Sectors: {dict(sector_counts)}")
+
+    print("      Computing factors…")
     fraw   = compute_factors(prices, market)
     fnorm  = cross_sectional_zscore(fraw)
     print(f"      Factor panel: {fnorm.shape}")
@@ -325,7 +331,8 @@ def run_pipeline(prices, betas, market):
     print("      Running backtest...")
     result = run_backtest(prices, signals, betas,
                           transaction_cost_bps=config.TRANSACTION_COST_BPS,
-                          top_n=top_n, lambda_reg=config.LAMBDA_REG)
+                          top_n=top_n, lambda_reg=config.LAMBDA_REG,
+                          sector_map=sector_map)
     return result
 
 

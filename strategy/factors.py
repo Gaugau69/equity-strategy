@@ -101,35 +101,64 @@ def _rolling_beta(
 # Normalisation
 # ─────────────────────────────────────────────────────────────────────────────
 
-def cross_sectional_zscore(panel: pd.DataFrame) -> pd.DataFrame:
+def cross_sectional_zscore(
+    panel: pd.DataFrame,
+    sector_map: dict[str, str] | None = None,
+    min_sector_size: int = 5,
+) -> pd.DataFrame:
     """
-    Normalise each factor cross-sectionally at every date:
+    Normalise each factor cross-sectionally at every date.
 
-        1. Subtract cross-sectional mean and divide by cross-sectional std
-        2. Winsorise at ±3 σ  (clip after z-scoring)
+    If sector_map is provided, z-scores within each GICS sector so that
+    a stock is ranked against peers in the same industry rather than the
+    whole universe.  Sectors with fewer than min_sector_size stocks fall
+    back to global z-scoring so no stock is ever left unscored.
 
-    Parameters
-    ----------
-    panel : MultiIndex-column DataFrame as returned by `compute_factors`
-
-    Returns
-    -------
-    normalised panel with same shape
+    Steps: (1) subtract sector mean, divide by sector std, (2) winsorise ±3σ.
     """
     out = panel.copy()
-
     factor_names = out.columns.get_level_values(0).unique()
 
     for fname in factor_names:
-        s  = out[fname]
-        mu = s.mean(axis=1)
-        sd = s.std(axis=1)
+        s = out[fname]          # DataFrame: dates × tickers
+        tickers = s.columns.tolist()
 
-        z = (
-            s.subtract(mu, axis=0)
-             .divide(sd.replace(0, np.nan), axis=0)
-             .clip(-3, 3)
-        )
+        if sector_map is not None:
+            sectors = pd.Series({t: sector_map.get(t, "Unknown") for t in tickers})
+            z = pd.DataFrame(np.nan, index=s.index, columns=s.columns)
+
+            for sector, group in sectors.groupby(sectors):
+                sec_tks = group.index.tolist()
+                if len(sec_tks) < min_sector_size:
+                    continue
+                sec = s[sec_tks]
+                mu  = sec.mean(axis=1)
+                sd  = sec.std(axis=1)
+                z[sec_tks] = (
+                    sec.subtract(mu, axis=0)
+                       .divide(sd.replace(0, np.nan), axis=0)
+                       .clip(-3, 3)
+                )
+
+            # Global fallback for stocks in small/unknown sectors
+            if z.isna().any(axis=None):
+                mu_g = s.mean(axis=1)
+                sd_g = s.std(axis=1)
+                global_z = (
+                    s.subtract(mu_g, axis=0)
+                     .divide(sd_g.replace(0, np.nan), axis=0)
+                     .clip(-3, 3)
+                )
+                z = z.fillna(global_z)
+        else:
+            mu = s.mean(axis=1)
+            sd = s.std(axis=1)
+            z = (
+                s.subtract(mu, axis=0)
+                 .divide(sd.replace(0, np.nan), axis=0)
+                 .clip(-3, 3)
+            )
+
         out[fname] = z
 
     return out
