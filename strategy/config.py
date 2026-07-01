@@ -30,7 +30,7 @@ HIGH52W_WINDOW    : int = 252   # 52-week high lookback (trading days)
 RVOL_WINDOW       : int = 20    # relative volume normalization window (days)
 
 # ── Signal generation (rolling Ridge) ────────────────────────────────────────
-TRAIN_WINDOW  : int   = 52    # training window in weeks
+TRAIN_WINDOW  : int   = 52    # training window in rebalancing periods
 REBAL_FREQ    : int   = 10    # rebalancing frequency in business days (≈ biweekly)
 RIDGE_ALPHA   : float = 100.0  # Ridge regularisation strength
 
