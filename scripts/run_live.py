@@ -275,30 +275,38 @@ def compute_orders(target_weights: pd.Series,
 
 
 def submit_orders(orders_df: pd.DataFrame, nav: float) -> None:
-    """Submit MOO (Market on Open) orders via IBKR."""
+    """Submit Market-on-Open orders via IBKR (MKT + tif=OPG on SMART routing)."""
     if orders_df.empty:
         print("  No orders to submit.")
         return
 
     try:
         from ib_insync import IB, Stock, Order, util
-        util.logToConsole("CRITICAL")
+        util.logToConsole("WARNING")
     except ImportError:
         print("  ib_insync not installed.")
         return
 
+    errors = []
+
     ib = IB()
+    ib.errorEvent += lambda reqId, code, msg, _: (
+        errors.append((reqId, code, msg))
+        if code not in (2104, 2106, 2158, 2119)  # benign market-data farm msgs
+        else None
+    )
     ib.connect(IBKR_HOST, IBKR_PORT, clientId=IBKR_CLIENT_ID + 1, timeout=10)
+    ib.sleep(0.5)  # let connection settle
 
     submitted = 0
     for _, row in orders_df.iterrows():
         contract = Stock(row["ticker"], "SMART", "USD")
         order    = Order(
-            action          = row["side"],
-            totalQuantity   = row["shares"],
-            orderType       = "MOO",   # Market on Open
-            tif             = "OPG",   # At the opening
-            outsideRth      = False,
+            action        = row["side"],
+            totalQuantity = row["shares"],
+            orderType     = "MKT",   # MKT + tif=OPG = Market on Open via SMART
+            tif           = "OPG",
+            outsideRth    = False,
         )
         trade = ib.placeOrder(contract, order)
         ib.sleep(0.1)
@@ -306,8 +314,14 @@ def submit_orders(orders_df: pd.DataFrame, nav: float) -> None:
               f"(Δw={row['delta_weight']:+.2f}%)  → orderId={trade.order.orderId}")
         submitted += 1
 
+    ib.sleep(2)  # ensure all orders are transmitted before disconnect
     ib.disconnect()
     print(f"      {submitted} orders submitted.")
+
+    if errors:
+        print("  TWS errors/warnings:")
+        for reqId, code, msg in errors:
+            print(f"    [{code}] {msg}")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
